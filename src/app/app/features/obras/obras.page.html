@@ -1,0 +1,238 @@
+<section class="p-6 bg-[#0B3C5D] min-h-screen text-white">
+  <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    <h1 class="text-2xl font-bold text-orange-400">Obras</h1>
+
+    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+      <input
+        type="search"
+        [(ngModel)]="search"
+        placeholder="Buscar por obra, ubicación, responsable o estado"
+        aria-label="Buscar obras"
+        class="px-4 py-2 rounded-lg bg-white/10 border border-white/20 placeholder:text-slate-300
+               focus:outline-none focus:ring-2 focus:ring-orange-400/60 w-full sm:w-72"
+      />
+      <button
+        class="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 text-slate-900 font-semibold
+               transition shadow-lg shadow-orange-500/20"
+        (click)="toggleAddForm()"
+      >
+        {{ showAddForm ? 'Cerrar' : '➕ Agregar' }}
+      </button>
+    </div>
+  </header>
+
+  <div class="overflow-x-auto rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm shadow-lg">
+    <table class="min-w-full text-sm">
+      <thead class="bg-orange-500/20 text-orange-200 uppercase text-xs">
+        <tr>
+          <th class="px-4 py-3 text-left">Obra</th>
+          <th class="px-4 py-3">Ubicación</th>
+          <th class="px-4 py-3">Responsable</th>
+          <th class="px-4 py-3">Estado</th>
+          <th class="px-4 py-3">Presupuesto</th>
+          <th class="px-4 py-3">Gastado</th>
+          <th class="px-4 py-3">Saldo</th>
+          <th class="px-4 py-3">Fechas</th>
+          <th class="px-4 py-3">Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-white/10">
+        <tr *ngFor="let obra of obrasFiltradas; trackBy: trackById" class="hover:bg-orange-500/10 transition">
+          <td class="px-4 py-3"><strong>{{ obra.nombre }}</strong></td>
+
+          <td class="px-4 py-3">{{ obra.ubicacion }}</td>
+
+          <td class="px-4 py-3">{{ obra.responsable }}</td>
+
+          <td class="px-4 py-3 text-center">
+            <span
+              class="px-2 py-1 rounded-full text-xs font-semibold"
+              [ngClass]="{
+                'bg-green-500/20 text-green-300': obra.estado === 'Activa',
+                'bg-yellow-500/20 text-yellow-300': obra.estado === 'Pausada',
+                'bg-blue-500/20 text-blue-300': obra.estado === 'Finalizada'
+              }"
+            >
+              {{ obra.estado }}
+            </span>
+          </td>
+
+          <td class="px-4 py-3 text-center">
+            <span *ngIf="idEditando !== obra.id">{{ obra.presupuesto | currency:'PEN':'symbol':'1.2-2' }}</span>
+            <input
+              *ngIf="idEditando === obra.id"
+              type="number"
+              min="0"
+              step="0.01"
+              [(ngModel)]="obra.tempPresupuesto"
+              class="w-24 px-2 py-1 rounded bg-white/10 border border-white/20 text-center
+                     focus:outline-none focus:ring-2 focus:ring-orange-400/60"
+            />
+          </td>
+
+          <td class="px-4 py-3 text-center">{{ obra.gastado | currency:'PEN':'symbol':'1.2-2' }}</td>
+
+          <td class="px-4 py-3 text-center">{{ (obra.presupuesto - obra.gastado) | currency:'PEN':'symbol':'1.2-2' }}</td>
+
+          <td class="px-4 py-3 text-xs">
+            <div><strong>Inicio:</strong> {{ obra.fechaInicio }}</div>
+            <div *ngIf="obra.fechaFin"><strong>Fin:</strong> {{ obra.fechaFin }}</div>
+          </td>
+
+          <td class="px-4 py-3 flex gap-2 justify-center">
+            <button
+              *ngIf="idEditando !== obra.id"
+              class="px-3 py-1 rounded bg-blue-500 hover:bg-blue-400 text-white text-xs"
+              (click)="empezarEdicion(obra)"
+            >
+              Editar
+            </button>
+
+            <ng-container *ngIf="idEditando === obra.id">
+              <button
+                class="px-3 py-1 rounded bg-green-500 hover:bg-green-400 text-white text-xs"
+                (click)="guardarEdicion(obra)"
+              >
+                Guardar
+              </button>
+              <button
+                class="px-3 py-1 rounded bg-gray-500 hover:bg-gray-400 text-white text-xs"
+                (click)="cancelarEdicion(obra)"
+              >
+                Cancelar
+              </button>
+            </ng-container>
+
+            <button
+              class="px-3 py-1 rounded bg-red-500 hover:bg-red-400 text-white text-xs"
+              (click)="eliminarObra(obra)"
+            >
+              Eliminar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+
+      <tfoot *ngIf="obrasFiltradas.length" class="bg-white/5 text-slate-200 text-sm">
+        <tr>
+          <td colspan="4" class="px-4 py-3"><strong>Total obras: {{ obrasFiltradas.length }}</strong></td>
+          <td class="px-4 py-3">{{ getTotalPresupuesto(obrasFiltradas) | currency:'PEN':'symbol':'1.2-2' }}</td>
+          <td class="px-4 py-3">{{ getTotalGastado(obrasFiltradas) | currency:'PEN':'symbol':'1.2-2' }}</td>
+          <td class="px-4 py-3">{{ getTotalSaldo(obrasFiltradas) | currency:'PEN':'symbol':'1.2-2' }}</td>
+          <td colspan="2"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div *ngIf="obrasFiltradas.length === 0" class="mt-6 text-center text-slate-300">
+    <p>No se encontraron obras.</p>
+  </div>
+
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+       *ngIf="showAddForm"
+       (click)="onOverlayClick($event)">
+    <div
+      class="bg-[#0B3C5D] rounded-xl shadow-xl w-full max-w-2xl border border-white/10"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="flex justify-between items-center px-6 py-4 border-b border-white/10">
+        <h2 id="modal-title" class="text-lg font-semibold text-orange-300">Agregar obra</h2>
+        <button class="text-2xl leading-none hover:text-orange-400" (click)="toggleAddForm()" aria-label="Cerrar">×</button>
+      </header>
+
+      <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <label class="text-sm">
+          Nombre
+          <input type="text" [(ngModel)]="newObra.nombre"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+        </label>
+
+        <label class="text-sm">
+          Ubicación
+          <input type="text" [(ngModel)]="newObra.ubicacion"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+        </label>
+
+        <label class="text-sm">
+          Responsable
+          <input type="text" [(ngModel)]="newObra.responsable"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+        </label>
+
+        <label class="text-sm">
+          Estado
+          <select [(ngModel)]="newObra.estado"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60">
+            <option value="Activa">Activa</option>
+            <option value="Pausada">Pausada</option>
+            <option value="Finalizada">Finalizada</option>
+          </select>
+        </label>
+
+        <label class="text-sm">
+          Presupuesto (PEN)
+          <input type="number" min="0" step="0.01" [(ngModel)]="newObra.presupuesto"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+        </label>
+
+        <label class="text-sm">
+          Gastado (PEN)
+          <input type="number" min="0" step="0.01" [(ngModel)]="newObra.gastado"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+        </label>
+
+        <label class="text-sm">
+          Inicio
+          <input type="date" [(ngModel)]="newObra.fechaInicio"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+        </label>
+
+        <label class="text-sm">
+          Fin (opcional)
+          <input type="date" [(ngModel)]="newObra.fechaFin"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+        </label>
+      </div>
+
+      <footer class="flex justify-end gap-3 px-6 py-4 border-t border-white/10">
+        <button
+          class="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-400 text-white font-semibold
+                 transition shadow-lg shadow-green-500/20"
+          (click)="addObra()"
+        >
+          Guardar
+        </button>
+        <button
+          class="px-4 py-2 rounded-lg bg-gray-500 hover:bg-gray-400 text-white font-semibold
+                 transition shadow-lg shadow-gray-500/20"
+          (click)="toggleAddForm()"
+        >
+          Cancelar
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <button
+    class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-orange-500 hover:bg-orange-400
+           text-white text-3xl font-bold shadow-lg shadow-orange-500/30 flex items-center justify-center
+           transition"
+    (click)="toggleAddForm()"
+    aria-label="Agregar obra"
+  >
+    +
+  </button>
+</section>

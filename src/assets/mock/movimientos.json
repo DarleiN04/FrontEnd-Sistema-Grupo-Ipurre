@@ -1,0 +1,4 @@
+[
+    { "id": "mov-1", "fecha": "2025-08-01T10:00:00Z", "tipo": "egreso", "materialId": "mat-1", "cantidad": 2, "obraId": "obr-1" },
+    { "id": "mov-2", "fecha": "2025-08-02T15:30:00Z", "tipo": "devolucion", "materialId": "mat-2", "cantidad": 1, "obraId": "obr-2" }
+    ]

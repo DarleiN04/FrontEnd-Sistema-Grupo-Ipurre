@@ -1,0 +1,64 @@
+<div class="min-h-screen bg-[#0B3C5D] text-white p-6">
+  <h1 class="text-3xl font-bold mb-8 text-orange-400">Dashboard</h1>
+
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+    <div
+      class="rounded-xl bg-white/5 p-6 shadow-lg border border-white/10 backdrop-blur-sm
+             hover:scale-[1.02] transition transform duration-300"
+    >
+      <span class="block text-4xl font-extrabold text-orange-400">{{ totalMateriales }}</span>
+      <span class="text-sm text-slate-200">Materiales</span>
+    </div>
+
+    <div
+      class="rounded-xl bg-white/5 p-6 shadow-lg border border-white/10 backdrop-blur-sm
+             hover:scale-[1.02] transition transform duration-300"
+    >
+      <span class="block text-4xl font-extrabold text-orange-400">{{ totalObras }}</span>
+      <span class="text-sm text-slate-200">Obras</span>
+    </div>
+
+    <div
+      class="rounded-xl bg-white/5 p-6 shadow-lg border border-white/10 backdrop-blur-sm
+             hover:scale-[1.02] transition transform duration-300"
+    >
+      <span class="block text-4xl font-extrabold text-orange-400">{{ totalMovimientos }}</span>
+      <span class="text-sm text-slate-200">Movimientos</span>
+    </div>
+  </div>
+
+  <div class="bg-white/5 rounded-xl border border-white/10 shadow-lg backdrop-blur-sm">
+    <div class="px-6 py-4 border-b border-white/10">
+      <h2 class="text-xl font-semibold text-orange-300">Últimos Movimientos</h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm text-left">
+        <thead class="bg-orange-500/20 text-orange-200 uppercase text-xs">
+          <tr>
+            <th class="px-6 py-3">Fecha</th>
+            <th class="px-6 py-3">Proyecto</th>
+            <th class="px-6 py-3">Recurso</th>
+            <th class="px-6 py-3">Tipo</th>
+            <th class="px-6 py-3">Cantidad</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/10">
+          <tr class="hover:bg-orange-500/10 transition">
+            <td class="px-6 py-4">23/08/2025</td>
+            <td class="px-6 py-4">Edificio San Isidro</td>
+            <td class="px-6 py-4">Taladro</td>
+            <td class="px-6 py-4 text-red-400 font-semibold">Egreso</td>
+            <td class="px-6 py-4">2</td>
+          </tr>
+          <tr class="hover:bg-orange-500/10 transition">
+            <td class="px-6 py-4">24/08/2025</td>
+            <td class="px-6 py-4">Remodelación Miraflores</td>
+            <td class="px-6 py-4">Carretilla</td>
+            <td class="px-6 py-4 text-green-400 font-semibold">Devolución</td>
+            <td class="px-6 py-4">1</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

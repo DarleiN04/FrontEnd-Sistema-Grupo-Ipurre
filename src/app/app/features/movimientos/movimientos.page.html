@@ -1,0 +1,303 @@
+<section class="p-6 bg-[#0B3C5D] min-h-screen text-white">
+  <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    <h1 class="text-2xl font-bold text-orange-400">Movimientos</h1>
+
+    <div class="flex flex-col sm:flex-row flex-wrap gap-3 w-full md:w-auto">
+      <input
+        type="search"
+        [(ngModel)]="search"
+        placeholder="Buscar por material, obra, usuario o nota"
+        aria-label="Buscar movimientos"
+        class="px-4 py-2 rounded-lg bg-white/10 border border-white/20 placeholder:text-slate-300
+               focus:outline-none focus:ring-2 focus:ring-orange-400/60 w-full sm:w-64"
+      />
+
+      <select
+        [(ngModel)]="filtroTipo"
+        aria-label="Tipo de movimiento"
+        class="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-slate-200
+               focus:outline-none focus:ring-2 focus:ring-orange-400/60"
+      >
+        <option value="">Todos</option>
+        <option value="Entrada">Entrada</option>
+        <option value="Salida">Salida</option>
+        <option value="Ajuste">Ajuste</option>
+        <option value="Transferencia">Transferencia</option>
+      </select>
+
+      <input type="date" [(ngModel)]="fechaDesde"
+        class="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-slate-200
+               focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+
+      <input type="date" [(ngModel)]="fechaHasta"
+        class="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-slate-200
+               focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+
+      <button
+        class="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 text-slate-900 font-semibold
+               transition shadow-lg shadow-orange-500/20"
+        (click)="toggleAddForm()"
+      >
+        {{ showAddForm ? 'Cerrar' : '➕ Agregar' }}
+      </button>
+    </div>
+  </header>
+
+  <div class="overflow-x-auto rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm shadow-lg">
+    <table class="min-w-full text-sm">
+      <thead class="bg-orange-500/20 text-orange-200 uppercase text-xs">
+        <tr>
+          <th class="px-4 py-3">#</th>
+          <th class="px-4 py-3">Fecha</th>
+          <th class="px-4 py-3">Tipo</th>
+          <th class="px-4 py-3">Material</th>
+          <th class="px-4 py-3 text-right">Cantidad</th>
+          <th class="px-4 py-3 text-right">Costo unit.</th>
+          <th class="px-4 py-3 text-right">Valor</th>
+          <th class="px-4 py-3">Obra</th>
+          <th class="px-4 py-3">Usuario</th>
+          <th class="px-4 py-3">Nota</th>
+          <th class="px-4 py-3">Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-white/10">
+        <tr *ngFor="let m of movimientosFiltrados; trackBy: trackById" class="hover:bg-orange-500/10 transition">
+          <td class="px-4 py-3">{{ m.id }}</td>
+          <td class="px-4 py-3">{{ m.fecha }}</td>
+          <td class="px-4 py-3">
+            <span
+              class="px-2 py-1 rounded-full text-xs font-semibold"
+              [ngClass]="{
+                'bg-green-500/20 text-green-300': m.tipo === 'Entrada',
+                'bg-red-500/20 text-red-300': m.tipo === 'Salida',
+                'bg-yellow-500/20 text-yellow-300': m.tipo === 'Ajuste',
+                'bg-blue-500/20 text-blue-300': m.tipo === 'Transferencia'
+              }"
+            >
+              {{ m.tipo }}
+            </span>
+          </td>
+          <td class="px-4 py-3">{{ m.material }}</td>
+
+          <!-- Cantidad editable -->
+          <td class="px-4 py-3 text-right">
+            <span *ngIf="idEditando !== m.id">{{ m.cantidad | number:'1.0-2' }}</span>
+            <input
+              *ngIf="idEditando === m.id"
+              type="number" step="0.01"
+              [(ngModel)]="m.tempCantidad"
+              class="w-20 px-2 py-1 rounded bg-white/10 border border-white/20 text-right
+                     focus:outline-none focus:ring-2 focus:ring-orange-400/60"
+            />
+          </td>
+
+          <!-- Costo editable -->
+          <td class="px-4 py-3 text-right">
+            <span *ngIf="idEditando !== m.id">{{ m.costo | currency:'PEN':'symbol':'1.2-2' }}</span>
+            <input
+              *ngIf="idEditando === m.id"
+              type="number" min="0" step="0.01"
+              [(ngModel)]="m.tempCosto"
+              class="w-24 px-2 py-1 rounded bg-white/10 border border-white/20 text-right
+                     focus:outline-none focus:ring-2 focus:ring-orange-400/60"
+            />
+          </td>
+
+          <!-- Valor -->
+          <td class="px-4 py-3 text-right">
+            {{ (m.cantidad * m.costo) | currency:'PEN':'symbol':'1.2-2' }}
+          </td>
+
+          <td class="px-4 py-3">{{ m.obra }}</td>
+          <td class="px-4 py-3">{{ m.usuario }}</td>
+          <td class="px-4 py-3">{{ m.nota }}</td>
+
+          <!-- Acciones -->
+          <td class="px-4 py-3 flex gap-2 flex-wrap">
+            <button
+              *ngIf="idEditando !== m.id"
+              class="px-3 py-1 rounded bg-blue-500 hover:bg-blue-400 text-white text-xs"
+              (click)="empezarEdicion(m)"
+            >
+              Editar
+            </button>
+            <ng-container *ngIf="idEditando === m.id">
+              <button
+                class="px-3 py-1 rounded bg-green-500 hover:bg-green-400 text-white text-xs"
+                (click)="guardarEdicion(m)"
+              >
+                Guardar
+              </button>
+              <button
+                class="px-3 py-1 rounded bg-gray-500 hover:bg-gray-400 text-white text-xs"
+                (click)="cancelarEdicion(m)"
+              >
+                Cancelar
+              </button>
+            </ng-container>
+            <button
+              class="px-3 py-1 rounded bg-red-500 hover:bg-red-400 text-white text-xs"
+              (click)="eliminarMovimiento(m)"
+            >
+              Eliminar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+
+      <!-- Totales -->
+      <tfoot *ngIf="movimientosFiltrados.length" class="bg-white/5 text-slate-200 text-sm">
+        <tr>
+          <td colspan="4" class="px-4 py-3 font-semibold">Totales</td>
+          <td class="px-4 py-3 text-right">
+            <div><strong>Ent:</strong> {{ getEntradasCantidad(movimientosFiltrados) | number:'1.0-2' }}</div>
+            <div><strong>Sal:</strong> {{ getSalidasCantidad(movimientosFiltrados) | number:'1.0-2' }}</div>
+            <div><strong>Neto:</strong> {{ getNetoCantidad(movimientosFiltrados) | number:'1.0-2' }}</div>
+          </td>
+          <td></td>
+          <td class="px-4 py-3 text-right">
+            <div><strong>Ent:</strong> {{ getEntradasValor(movimientosFiltrados) | currency:'PEN':'symbol':'1.2-2' }}</div>
+            <div><strong>Sal:</strong> {{ getSalidasValor(movimientosFiltrados) | currency:'PEN':'symbol':'1.2-2' }}</div>
+            <div><strong>Neto:</strong> {{ getNetoValor(movimientosFiltrados) | currency:'PEN':'symbol':'1.2-2' }}</div>
+          </td>
+          <td colspan="4"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- Sin resultados -->
+  <div *ngIf="movimientosFiltrados.length === 0" class="mt-6 text-center text-slate-300">
+    <p>No se encontraron movimientos.</p>
+  </div>
+
+  <!-- Modal Agregar -->
+  <div
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    *ngIf="showAddForm"
+    (click)="onOverlayClick($event)"
+  >
+    <div
+      class="bg-[#0B3C5D] rounded-xl shadow-xl w-full max-w-3xl border border-white/10"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Header -->
+      <header class="flex justify-between items-center px-6 py-4 border-b border-white/10">
+        <h2 id="modal-title" class="text-lg font-semibold text-orange-300">Agregar movimiento</h2>
+        <button
+          class="text-2xl leading-none hover:text-orange-400"
+          (click)="toggleAddForm()"
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
+      </header>
+
+      <!-- Body -->
+      <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <label class="text-sm">
+          Fecha
+          <input type="date" [(ngModel)]="newMov.fecha"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+        </label>
+
+        <label class="text-sm">
+          Tipo
+          <select [(ngModel)]="newMov.tipo"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60">
+            <option value="Entrada">Entrada</option>
+            <option value="Salida">Salida</option>
+            <option value="Ajuste">Ajuste</option>
+            <option value="Transferencia">Transferencia</option>
+          </select>
+        </label>
+
+        <label class="text-sm">
+          Material
+          <input #materialInput list="materials-list" type="text" [(ngModel)]="newMov.material"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+          <datalist id="materials-list">
+            <option *ngFor="let op of materialesOptions" [value]="op"></option>
+          </datalist>
+        </label>
+
+        <label class="text-sm">
+          Cantidad
+          <input type="number" step="0.01" [(ngModel)]="newMov.cantidad"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+        </label>
+
+        <label class="text-sm">
+          Costo unit. (PEN)
+          <input type="number" min="0" step="0.01" [(ngModel)]="newMov.costo"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+        </label>
+
+        <label class="text-sm">
+          Obra
+          <input list="obras-list" type="text" [(ngModel)]="newMov.obra"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+          <datalist id="obras-list">
+            <option *ngFor="let op of obrasOptions" [value]="op"></option>
+          </datalist>
+        </label>
+
+        <label class="text-sm">
+          Usuario
+          <input list="usuarios-list" type="text" [(ngModel)]="newMov.usuario"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+          <datalist id="usuarios-list">
+            <option *ngFor="let op of usuariosOptions" [value]="op"></option>
+          </datalist>
+        </label>
+
+        <label class="text-sm sm:col-span-2">
+          Nota
+          <input type="text" [(ngModel)]="newMov.nota"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+        </label>
+      </div>
+
+      <!-- Footer -->
+      <footer class="flex justify-end gap-3 px-6 py-4 border-t border-white/10">
+        <button
+          class="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-400 text-white font-semibold
+                 transition shadow-lg shadow-green-500/20"
+          (click)="addMovimiento()"
+        >
+          Guardar
+        </button>
+        <button
+          class="px-4 py-2 rounded-lg bg-gray-500 hover:bg-gray-400 text-white font-semibold
+                 transition shadow-lg shadow-gray-500/20"
+          (click)="toggleAddForm()"
+        >
+          Cancelar
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- FAB flotante -->
+  <button
+    class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-orange-500 hover:bg-orange-400
+           text-white text-3xl font-bold shadow-lg shadow-orange-500/30 flex items-center justify-center
+           transition"
+    (click)="toggleAddForm()"
+    aria-label="Agregar movimiento"
+  >
+    +
+  </button>
+</section>

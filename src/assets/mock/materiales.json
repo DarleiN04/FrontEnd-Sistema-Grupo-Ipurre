@@ -1,0 +1,20 @@
+[
+    {
+    "id": "mat-1",
+    "codigo": "MAT-0001",
+    "nombre": "Taladro percutor",
+    "categoria": "herramienta",
+    "unidad": "unidad",
+    "marca": "Bosch",
+    "modelo": "GSB 13 RE",
+    "stock": { "total": 12, "enUso": 5, "enAlmacen": 7, "minimo": 3 }
+    },
+    {
+    "id": "mat-2",
+    "codigo": "MAT-0002",
+    "nombre": "Carretilla",
+    "categoria": "equipamiento",
+    "unidad": "unidad",
+    "stock": { "total": 20, "enUso": 8, "enAlmacen": 12, "minimo": 5 }
+    }
+    ]

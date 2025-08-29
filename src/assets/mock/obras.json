@@ -1,0 +1,4 @@
+[
+    { "id": "obr-1", "nombre": "Edificio San Isidro", "codigo": "OBR-01", "estado": "activa" },
+    { "id": "obr-2", "nombre": "Remodelación Miraflores", "codigo": "OBR-02", "estado": "activa" }
+    ]

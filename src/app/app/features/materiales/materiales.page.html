@@ -1,0 +1,213 @@
+<section class="p-6 bg-[#0B3C5D] min-h-screen text-white">
+  <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    <h1 class="text-2xl font-bold text-orange-400">Materiales</h1>
+
+    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+      <input
+        type="search"
+        [(ngModel)]="search"
+        placeholder="Buscar por nombre o proveedor"
+        aria-label="Buscar materiales"
+        class="px-4 py-2 rounded-lg bg-white/10 border border-white/20 placeholder:text-slate-300
+               focus:outline-none focus:ring-2 focus:ring-orange-400/60 w-full sm:w-64"
+      />
+      <button
+        class="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 text-slate-900 font-semibold
+               transition shadow-lg shadow-orange-500/20"
+        (click)="toggleAddForm()"
+      >
+        {{ showAddForm ? 'Cerrar' : '➕ Agregar' }}
+      </button>
+    </div>
+  </header>
+
+  <div class="overflow-x-auto rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm shadow-lg">
+    <table class="min-w-full text-sm">
+      <thead class="bg-orange-500/20 text-orange-200 uppercase text-xs">
+        <tr>
+          <th class="px-4 py-3 text-left">Nombre</th>
+          <th class="px-4 py-3">Cantidad</th>
+          <th class="px-4 py-3">Costo</th>
+          <th class="px-4 py-3">Valor total</th>
+          <th class="px-4 py-3">Estado</th>
+          <th class="px-4 py-3">Proveedor</th>
+          <th class="px-4 py-3">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-white/10">
+        <tr *ngFor="let material of materialesFiltrados; trackBy: trackById" class="hover:bg-orange-500/10 transition">
+          <td class="px-4 py-3">
+            <strong>{{ material.nombre }}</strong>
+            <div class="text-xs text-slate-300">{{ material.unidad }}</div>
+          </td>
+
+          <td class="px-4 py-3 text-center">
+            <span *ngIf="idEditando !== material.id">{{ material.cantidad | number:'1.0-0' }}</span>
+            <input
+              *ngIf="idEditando === material.id"
+              type="number"
+              min="0"
+              [(ngModel)]="material.tempCantidad"
+              class="w-20 px-2 py-1 rounded bg-white/10 border border-white/20 text-center
+                     focus:outline-none focus:ring-2 focus:ring-orange-400/60"
+            />
+          </td>
+
+          <td class="px-4 py-3 text-center">{{ material.costo | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td class="px-4 py-3 text-center">{{ (material.cantidad * material.costo) | currency:'USD':'symbol':'1.2-2' }}</td>
+
+          <td class="px-4 py-3 text-center">
+            <span
+              class="px-2 py-1 rounded-full text-xs font-semibold"
+              [ngClass]="{
+                'bg-green-500/20 text-green-300': material.estado === 'En Stock',
+                'bg-yellow-500/20 text-yellow-300': material.estado === 'Stock Bajo',
+                'bg-red-500/20 text-red-300': material.estado === 'Agotado'
+              }"
+            >
+              {{ material.estado }}
+            </span>
+          </td>
+
+          <td class="px-4 py-3 text-center">{{ material.proveedor }}</td>
+
+          <td class="px-4 py-3 flex gap-2 justify-center">
+            <button
+              *ngIf="idEditando !== material.id"
+              class="px-3 py-1 rounded bg-blue-500 hover:bg-blue-400 text-white text-xs"
+              (click)="empezarEdicion(material)"
+            >
+              Editar
+            </button>
+
+            <ng-container *ngIf="idEditando === material.id">
+              <button
+                class="px-3 py-1 rounded bg-green-500 hover:bg-green-400 text-white text-xs"
+                (click)="guardarEdicion(material)"
+              >
+                Guardar
+              </button>
+              <button
+                class="px-3 py-1 rounded bg-gray-500 hover:bg-gray-400 text-white text-xs"
+                (click)="cancelarEdicion(material)"
+              >
+                Cancelar
+              </button>
+            </ng-container>
+
+            <button
+              class="px-3 py-1 rounded bg-red-500 hover:bg-red-400 text-white text-xs"
+              (click)="eliminarMaterial(material)"
+            >
+              Eliminar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+
+      <tfoot *ngIf="materialesFiltrados.length" class="bg-white/5 text-slate-200 text-sm">
+        <tr>
+          <td colspan="3" class="px-4 py-3">Total materiales: {{ materialesFiltrados.length }}</td>
+          <td class="px-4 py-3">{{ getValorInventario(materialesFiltrados) | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td colspan="3"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div *ngIf="materialesFiltrados.length === 0" class="mt-6 text-center text-slate-300">
+    <p>No se encontraron materiales.</p>
+  </div>
+
+  <div
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    *ngIf="showAddForm"
+    (click)="onOverlayClick($event)"
+  >
+    <div
+      class="bg-[#0B3C5D] rounded-xl shadow-xl w-full max-w-lg border border-white/10"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="flex justify-between items-center px-6 py-4 border-b border-white/10">
+        <h2 id="modal-title" class="text-lg font-semibold text-orange-300">Agregar material</h2>
+        <button class="text-2xl leading-none hover:text-orange-400" (click)="toggleAddForm()" aria-label="Cerrar">×</button>
+      </header>
+
+      <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <label class="text-sm">
+          Nombre
+          <input type="text" [(ngModel)]="newMaterial.nombre"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20 focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+        </label>
+
+        <label class="text-sm">
+          Cantidad
+          <input type="number" min="0" [(ngModel)]="newMaterial.cantidad"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20 focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+        </label>
+
+        <label class="text-sm">
+          Unidad
+          <input type="text" [(ngModel)]="newMaterial.unidad" placeholder="unidades, bolsas, m3..."
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20 focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+        </label>
+
+        <label class="text-sm">
+          Costo unit.
+          <input type="number" min="0" step="0.01" [(ngModel)]="newMaterial.costo"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20 focus:outline-none focus:ring-2 focus:ring-orange-400/60" />
+        </label>
+
+        <label class="text-sm">
+          Estado
+          <select [(ngModel)]="newMaterial.estado"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20 focus:outline-none focus:ring-2 focus:ring-orange-400/60">
+            <option value="En Stock">En Stock</option>
+            <option value="Stock Bajo">Stock Bajo</option>
+            <option value="Agotado">Agotado</option>
+          </select>
+        </label>
+
+        <label class="text-sm">
+          Proveedor
+          <input
+            type="text"
+            [(ngModel)]="newMaterial.proveedor"
+            class="mt-1 w-full px-3 py-2 rounded bg-white/10 border border-white/20
+                   focus:outline-none focus:ring-2 focus:ring-orange-400/60"
+          />
+        </label>
+      </div>
+
+      <footer class="flex justify-end gap-3 px-6 py-4 border-t border-white/10">
+        <button
+          class="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-400 text-white font-semibold
+                 transition shadow-lg shadow-green-500/20"
+          (click)="addMaterial()"
+        >
+          Guardar
+        </button>
+        <button
+          class="px-4 py-2 rounded-lg bg-gray-500 hover:bg-gray-400 text-white font-semibold
+                 transition shadow-lg shadow-gray-500/20"
+          (click)="toggleAddForm()"
+        >
+          Cancelar
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <button
+    class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-orange-500 hover:bg-orange-400
+           text-white text-3xl font-bold shadow-lg shadow-orange-500/30 flex items-center justify-center
+           transition"
+    (click)="toggleAddForm()"
+    aria-label="Agregar material"
+  >
+    +
+  </button>
+</section>
