@@ -4,5 +4,5 @@
 2.- npm install uuid
 3.- ng serve
 
-usuario: admin@gmail.com
+usuario: admin@admin.com
 pass: 123456
